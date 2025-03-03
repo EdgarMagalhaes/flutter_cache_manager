@@ -87,8 +87,7 @@ class CacheManager implements BaseCacheManager {
   /// cached file is too old the newly downloaded file is returned afterwards.
   @override
   @Deprecated('Prefer to use the new getFileStream method')
-  Stream<FileInfo> getFile(String url,
-      {String? key, Map<String, String>? headers}) {
+  Stream<FileInfo> getFile(String url, {String? key, Map<String, String>? headers}) {
     return getFileStream(
       url,
       key: key,
@@ -108,8 +107,7 @@ class CacheManager implements BaseCacheManager {
   /// returned from the cache there will be no progress given, although the file
   /// might be outdated and a new file is being downloaded in the background.
   @override
-  Stream<FileResponse> getFileStream(String url,
-      {String? key, Map<String, String>? headers, bool withProgress = false}) {
+  Stream<FileResponse> getFileStream(String url, {String? key, Map<String, String>? headers, bool withProgress = false}) {
     key ??= url;
     final streamController = StreamController<FileResponse>();
     _pushFileToStream(streamController, url, key, headers, withProgress);
@@ -132,14 +130,11 @@ class CacheManager implements BaseCacheManager {
         withProgress = false;
       }
     } on Object catch (e) {
-      cacheLogger.log(
-          'CacheManager: Failed to load cached file for $url with error:\n$e',
-          CacheManagerLogLevel.debug);
+      cacheLogger.log('CacheManager: Failed to load cached file for $url with error:\n$e', CacheManagerLogLevel.debug);
     }
     if (cacheFile == null || cacheFile.validTill.isBefore(DateTime.now())) {
       try {
-        await for (final response
-            in _webHelper.downloadFile(url, key: key, authHeaders: headers)) {
+        await for (final response in _webHelper.downloadFile(url, key: key, authHeaders: headers)) {
           if (response is DownloadProgress && withProgress) {
             streamController.add(response);
           }
@@ -148,20 +143,16 @@ class CacheManager implements BaseCacheManager {
           }
         }
       } on Object catch (e) {
-        cacheLogger.log(
-            'CacheManager: Failed to download file from $url with error:\n$e',
-            CacheManagerLogLevel.debug);
+        cacheLogger.log('CacheManager: Failed to download file from $url with error:\n$e', CacheManagerLogLevel.debug);
         if (cacheFile == null && streamController.hasListener) {
           streamController.addError(e);
         }
 
-        if (cacheFile != null &&
-            e is HttpExceptionWithStatus &&
-            e.statusCode == 404) {
+        if (cacheFile != null && e is HttpExceptionWithStatus && e.statusCode == 404) {
           if (streamController.hasListener) {
             streamController.addError(e);
           }
-          await removeFile(key);
+          // await removeFile(key);
         }
       }
     }
@@ -170,10 +161,7 @@ class CacheManager implements BaseCacheManager {
 
   ///Download the file and add to cache
   @override
-  Future<FileInfo> downloadFile(String url,
-      {String? key,
-      Map<String, String>? authHeaders,
-      bool force = false}) async {
+  Future<FileInfo> downloadFile(String url, {String? key, Map<String, String>? authHeaders, bool force = false}) async {
     key ??= url;
     final fileResponse = await _webHelper
         .downloadFile(
@@ -189,14 +177,11 @@ class CacheManager implements BaseCacheManager {
   /// Get the file from the cache.
   /// Specify [ignoreMemCache] to force a re-read from the database
   @override
-  Future<FileInfo?> getFileFromCache(String key,
-          {bool ignoreMemCache = false}) =>
-      _store.getFile(key, ignoreMemCache: ignoreMemCache);
+  Future<FileInfo?> getFileFromCache(String key, {bool ignoreMemCache = false}) => _store.getFile(key, ignoreMemCache: ignoreMemCache);
 
   ///Returns the file from memory if it has already been fetched
   @override
-  Future<FileInfo?> getFileFromMemory(String key) =>
-      _store.getFileFromMemory(key);
+  Future<FileInfo?> getFileFromMemory(String key) => _store.getFileFromMemory(key);
 
   /// Put a file in the cache. It is recommended to specify the [eTag] and the
   /// [maxAge]. When [maxAge] is passed and the eTag is not set the file will
